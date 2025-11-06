@@ -5,7 +5,7 @@
 -- Note: This file uses PostgreSQL types (SERIAL, JSONB, TIMESTAMP).
 
 -- desks
-CREATE TABLE IF NOT EXISTS desks (
+CREATE TABLE IF NOT EXISTS desk (
     id SERIAL PRIMARY KEY,
     height INT NOT NULL CHECK (height >= 0)
 );
@@ -17,10 +17,12 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     type VARCHAR(50) NOT NULL,
-    current_desk_id INT REFERENCES desks(id) ON DELETE SET NULL,
-    preferred_standing_height INT,
-    preferred_sitting_height INT,
+    current_desk_id INT,
+    standing_height INT,
+    sitting_height INT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    ,
+    CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desks(id) ON DELETE SET NULL
 );
 
 -- Workouts table
@@ -45,17 +47,21 @@ CREATE TABLE IF NOT EXISTS foods (
 -- Workout records table
 CREATE TABLE IF NOT EXISTS workout_records (
     id SERIAL PRIMARY KEY,
-    workout_id INT NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    workout_id INT NOT NULL,
+    user_id INT NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    CONSTRAINT fk_workout_records_workout FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_workout_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Food records table
 CREATE TABLE IF NOT EXISTS food_records (
     id SERIAL PRIMARY KEY,
-    food_id INT NOT NULL REFERENCES foods(id) ON DELETE CASCADE,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    food_id INT NOT NULL,
+    user_id INT NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    CONSTRAINT fk_food_records_food FOREIGN KEY (food_id) REFERENCES foods(id) ON DELETE CASCADE,
+    CONSTRAINT fk_food_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_workout_records_user ON workout_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
