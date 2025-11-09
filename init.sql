@@ -105,14 +105,3 @@ VALUES
 (1, 1),
 (2, 2);
 
-
--- Create a database user for connecting
-CREATE USER fitness_app_user WITH PASSWORD 'secure_password';
-
--- Grant privileges on the database
-GRANT ALL PRIVILEGES ON DATABASE fitness_db TO fitness_app_user;
-
--- Grant usage on all tables and sequences
-GRANT USAGE, SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO fitness_app_user;
-GRANT USAGE, SELECT, NEXTVAL, UPDATE ON ALL SEQUENCES IN SCHEMA public TO fitness_app_user;
-
