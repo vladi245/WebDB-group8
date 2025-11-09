@@ -1,8 +1,11 @@
-version: "3.9"
 services:
   db:
     image: postgres:15
     container_name: fitness_db
+    environment:
+      POSTGRES_USER: fitness_user
+      POSTGRES_PASSWORD: fitness_pass
+      POSTGRES_DB: fitness_db
     ports:
       - "5432:5432"
     volumes:

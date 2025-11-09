@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
     sitting_height INT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
     ,
-    CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desks(id) ON DELETE SET NULL
+    CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desk(id) ON DELETE SET NULL
 );
 
 -- Workouts table
