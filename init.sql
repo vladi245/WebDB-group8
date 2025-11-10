@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
     sitting_height INT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
     ,
-    CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desks(id) ON DELETE SET NULL
+    CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desk(id) ON DELETE SET NULL
 );
 
 -- Workouts table
@@ -67,3 +67,41 @@ CREATE INDEX IF NOT EXISTS idx_workout_records_user ON workout_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
 
 -- END OF SCHEMA
+
+
+-- Insert desks
+INSERT INTO desk (height) VALUES
+(70),
+(75),
+(80);
+
+-- Insert users
+INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_height, sitting_height)
+VALUES
+('Alice', 'alice@example.com', 'hashed_password_1', 'standard', 1, 110, 70),
+('Bob', 'bob@example.com', 'hashed_password_2', 'premium', 2, 115, 72);
+
+-- Insert workouts
+INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
+VALUES
+('Push Ups', 100, 3, 12, '["chest","triceps"]'),
+('Squats', 150, 4, 15, '["legs","glutes"]');
+
+-- Insert foods
+INSERT INTO foods (name, calories_intake)
+VALUES
+('Apple', 95),
+('Chicken Breast', 165);
+
+-- Insert workout records
+INSERT INTO workout_records (workout_id, user_id)
+VALUES
+(1, 1),
+(2, 2);
+
+-- Insert food records
+INSERT INTO food_records (food_id, user_id)
+VALUES
+(1, 1),
+(2, 2);
+
