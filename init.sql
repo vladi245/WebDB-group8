@@ -181,21 +181,21 @@ VALUES
 ('Cucumber Sandwich', 210);
 
 -- Insert workout records
-INSERT INTO workout_records (workout_id, user_id, timestamp)
+INSERT INTO workout_records (workout_id, user_id)
 VALUES
-(1, 1, now()),
-(2, 2, now()),
-(3, 1, now() - interval '1 day'),
-(4, 1, now() - interval '2 days'),
-(5, 1, now() - interval '3 days')
+(1, 1),
+(2, 2),
+(3, 1),
+(4, 1),
+(5, 1)
 ON CONFLICT DO NOTHING;
 
 -- Insert food records
-INSERT INTO food_records (food_id, user_id, timestamp)
+INSERT INTO food_records (food_id, user_id)
 VALUES
-(1, 1, now()),
-(2, 2, now()),
-(3, 1, now() - interval '8 hours'),
-(4, 1, now() - interval '1 day'),
-(5, 1, now() - interval '2 days')
+(1, 1),
+(2, 2),
+(3, 1),
+(4, 1),
+(5, 1)
 ON CONFLICT DO NOTHING;
