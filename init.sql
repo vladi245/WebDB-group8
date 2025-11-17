@@ -68,7 +68,6 @@ CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
 
 -- END OF SCHEMA
 
-
 -- Insert desks
 INSERT INTO desk (height) VALUES
 (70),
@@ -84,8 +83,17 @@ VALUES
 -- Insert workouts
 INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
 VALUES
+('Leg Press', 200, 3, 15, '["Glutes", "Hamstrings", "Quadriceps"]'),
+('Bench Press', 100, 4, 10, '["Chest", "Triceps", "Shoulders"]'),
+('Deadlift', 200, 3, 8, '["Back", "Hamstrings", "Glutes"]'),
+('Squats', 100, 4, 12, '["Quadriceps", "Glutes", "Hamstrings"]'),
+('Pull-ups', 150, 3, 10, '["Back", "Biceps", "Shoulders"]'),
+('Shoulder Press', 200, 3, 12, '["Shoulders", "Triceps"]'),
+('Bicep Curls', 300, 3, 15, '["Biceps"]'),
+('Tricep Dips', 100, 3, 12, '["Triceps", "Chest"]');
 ('Push Ups', 100, 3, 12, '["chest","triceps"]'),
 ('Squats', 150, 4, 15, '["legs","glutes"]');
+
 
 -- Insert foods
 INSERT INTO foods (name, calories_intake)
