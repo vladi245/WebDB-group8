@@ -82,26 +82,130 @@ VALUES
 ('Bob', 'bob@example.com', 'hashed_password_2', 'premium', 2, 115, 72);
 
 -- Insert workouts
-INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
+INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group) 
 VALUES
-('Push Ups', 100, 3, 12, '["chest","triceps"]'),
-('Squats', 150, 4, 15, '["legs","glutes"]');
+('Leg Press', NULL, 3, 15, '["Glutes", "Hamstrings", "Quadriceps"]'),
+('Bench Press', NULL, 4, 10, '["Chest", "Triceps", "Shoulders"]'),
+('Deadlift', NULL, 3, 8, '["Back", "Hamstrings", "Glutes"]'),
+('Squats', NULL, 4, 12, '["Quadriceps", "Glutes", "Hamstrings"]'),
+('Pull-ups', NULL, 3, 10, '["Back", "Biceps", "Shoulders"]'),
+('Shoulder Press', NULL, 3, 12, '["Shoulders", "Triceps"]'),
+('Bicep Curls', NULL, 3, 15, '["Biceps"]'),
+('Tricep Dips', NULL, 3, 12, '["Triceps", "Chest"]');
 
 -- Insert foods
 INSERT INTO foods (name, calories_intake)
 VALUES
-('Apple', 95),
-('Chicken Breast', 165);
+('Oatmeal', 250),
+('Greek Yogurt', 120),
+('Scrambled Eggs', 210),
+('Boiled Egg', 70),
+('Toast', 90),
+('Butter Toast', 150),
+('Peanut Butter Toast', 210),
+('Jam Toast', 140),
+('Cereal with Milk', 220),
+('Cornflakes', 180),
+('Muesli', 240),
+('Apple', 80),
+('Banana', 95),
+('Orange', 70),
+('Pear', 85),
+('Grapes', 60),
+('Strawberries', 50),
+('Blueberries', 85),
+('Kiwi', 60),
+('Watermelon', 45),
+('Granola Bar', 180),
+('Protein Bar', 210),
+('Pretzels', 110),
+('Crackers', 90),
+('Popcorn', 100),
+('Cheese Stick', 80),
+('Chips', 150),
+('Rice Cake', 35),
+('Mixed Nuts', 170),
+('Coffee', 5),
+('Tea', 5),
+('Milk', 120),
+('Chocolate Milk', 180),
+('Orange Juice', 110),
+('Apple Juice', 120),
+('Cola', 140),
+('Lemonade', 130),
+('Iced Coffee', 90),
+('Smoothie', 200),
+('Ham Sandwich', 350),
+('Cheese Sandwich', 320),
+('Peanut Butter Sandwich', 330),
+('Tuna Sandwich', 400),
+('Chicken Sandwich', 420),
+('Turkey Sandwich', 390),
+('Egg Sandwich', 320),
+('Rice', 200),
+('Pasta', 350),
+('Boiled Potatoes', 150),
+('Mashed Potatoes', 210),
+('Fried Potatoes', 320),
+('Grilled Chicken', 280),
+('Baked Chicken', 260),
+('Fried Chicken', 420),
+('Ground Beef', 290),
+('Meatballs', 330),
+('Hot Dog', 280),
+('Sausage', 300),
+('Bread Roll', 150),
+('Bagel', 280),
+('Croissant', 230),
+('Muffin', 300),
+('Pita Bread', 170),
+('Cheddar Cheese', 110),
+('Mozzarella Cheese', 85),
+('Cottage Cheese', 90),
+('Yogurt', 100),
+('Carrots', 50),
+('Tomatoes', 30),
+('Cucumber', 15),
+('Broccoli', 55),
+('Green Beans', 40),
+('Corn', 140),
+('Tomato Soup', 150),
+('Chicken Soup', 180),
+('Vegetable Soup', 120),
+('Baked Beans', 190),
+('Yogurt Drink', 90),
+('Croutons', 110),
+('Plain Bagel', 260),
+('Hard Bread', 60),
+('Jam', 60),
+('Honey Toast', 170),
+('Cucumber Sandwich', 210);
 
 -- Insert workout records
-INSERT INTO workout_records (workout_id, user_id)
+INSERT INTO workout_records (workout_id, user_id, timestamp, id)
 VALUES
-(1, 1),
-(2, 2);
+(1, 1, now(), 1),
+(2, 2, now(), 2),
+(3, 1, now() - interval '1 day', 3),
+(4, 1, now() - interval '2 days', 4),
+(5, 1, now() - interval '3 days', 5)
+ON CONFLICT DO NOTHING;
 
 -- Insert food records
-INSERT INTO food_records (food_id, user_id)
+INSERT INTO food_records (food_id, user_id, timestamp, id, portion_size)
 VALUES
-(1, 1),
-(2, 2);
+(1, 1, now(), 1, '1 medium'),
+(2, 2, now(), 2, 'large'),
+(3, 1, now() - interval '8 hours', 3, '1 bowl'),
+(4, 1, now() - interval '1 day', 4, '2 slices'),
+(5, 1, now() - interval '2 days', 5, 'standard')
+ON CONFLICT DO NOTHING;
+
+-- Reset serial sequences to the current maximum ids
+SELECT setval(pg_get_serial_sequence('desk','id'), COALESCE((SELECT MAX(id) FROM desk), 1), true);
+SELECT setval(pg_get_serial_sequence('users','id'), COALESCE((SELECT MAX(id) FROM users), 1), true);
+SELECT setval(pg_get_serial_sequence('workouts','id'), COALESCE((SELECT MAX(id) FROM workouts), 1), true);
+SELECT setval(pg_get_serial_sequence('foods','id'), COALESCE((SELECT MAX(id) FROM foods), 1), true);
+SELECT setval(pg_get_serial_sequence('workout_records','id'), COALESCE((SELECT MAX(id) FROM workout_records), 1), true);
+SELECT setval(pg_get_serial_sequence('food_records','id'), COALESCE((SELECT MAX(id) FROM food_records), 1), true);
 
