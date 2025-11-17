@@ -68,7 +68,6 @@ CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
 
 -- END OF SCHEMA
 
-
 -- Insert desks
 INSERT INTO desk (height) VALUES
 (70),
@@ -84,14 +83,14 @@ VALUES
 -- Insert workouts
 INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group) 
 VALUES
-('Leg Press', NULL, 3, 15, '["Glutes", "Hamstrings", "Quadriceps"]'),
-('Bench Press', NULL, 4, 10, '["Chest", "Triceps", "Shoulders"]'),
-('Deadlift', NULL, 3, 8, '["Back", "Hamstrings", "Glutes"]'),
-('Squats', NULL, 4, 12, '["Quadriceps", "Glutes", "Hamstrings"]'),
-('Pull-ups', NULL, 3, 10, '["Back", "Biceps", "Shoulders"]'),
-('Shoulder Press', NULL, 3, 12, '["Shoulders", "Triceps"]'),
-('Bicep Curls', NULL, 3, 15, '["Biceps"]'),
-('Tricep Dips', NULL, 3, 12, '["Triceps", "Chest"]');
+('Leg Press', 200, 3, 15, '["Glutes", "Hamstrings", "Quadriceps"]'),
+('Bench Press', 100, 4, 10, '["Chest", "Triceps", "Shoulders"]'),
+('Deadlift', 200, 3, 8, '["Back", "Hamstrings", "Glutes"]'),
+('Squats', 100, 4, 12, '["Quadriceps", "Glutes", "Hamstrings"]'),
+('Pull-ups', 150, 3, 10, '["Back", "Biceps", "Shoulders"]'),
+('Shoulder Press', 200, 3, 12, '["Shoulders", "Triceps"]'),
+('Bicep Curls', 300, 3, 15, '["Biceps"]'),
+('Tricep Dips', 100, 3, 12, '["Triceps", "Chest"]');
 
 -- Insert foods
 INSERT INTO foods (name, calories_intake)
@@ -182,30 +181,21 @@ VALUES
 ('Cucumber Sandwich', 210);
 
 -- Insert workout records
-INSERT INTO workout_records (workout_id, user_id, timestamp, id)
+INSERT INTO workout_records (workout_id, user_id, timestamp)
 VALUES
-(1, 1, now(), 1),
-(2, 2, now(), 2),
-(3, 1, now() - interval '1 day', 3),
-(4, 1, now() - interval '2 days', 4),
-(5, 1, now() - interval '3 days', 5)
+(1, 1, now()),
+(2, 2, now()),
+(3, 1, now() - interval '1 day'),
+(4, 1, now() - interval '2 days'),
+(5, 1, now() - interval '3 days')
 ON CONFLICT DO NOTHING;
 
 -- Insert food records
-INSERT INTO food_records (food_id, user_id, timestamp, id, portion_size)
+INSERT INTO food_records (food_id, user_id, timestamp)
 VALUES
-(1, 1, now(), 1, '1 medium'),
-(2, 2, now(), 2, 'large'),
-(3, 1, now() - interval '8 hours', 3, '1 bowl'),
-(4, 1, now() - interval '1 day', 4, '2 slices'),
-(5, 1, now() - interval '2 days', 5, 'standard')
+(1, 1, now()),
+(2, 2, now()),
+(3, 1, now() - interval '8 hours'),
+(4, 1, now() - interval '1 day'),
+(5, 1, now() - interval '2 days')
 ON CONFLICT DO NOTHING;
-
--- Reset serial sequences to the current maximum ids
-SELECT setval(pg_get_serial_sequence('desk','id'), COALESCE((SELECT MAX(id) FROM desk), 1), true);
-SELECT setval(pg_get_serial_sequence('users','id'), COALESCE((SELECT MAX(id) FROM users), 1), true);
-SELECT setval(pg_get_serial_sequence('workouts','id'), COALESCE((SELECT MAX(id) FROM workouts), 1), true);
-SELECT setval(pg_get_serial_sequence('foods','id'), COALESCE((SELECT MAX(id) FROM foods), 1), true);
-SELECT setval(pg_get_serial_sequence('workout_records','id'), COALESCE((SELECT MAX(id) FROM workout_records), 1), true);
-SELECT setval(pg_get_serial_sequence('food_records','id'), COALESCE((SELECT MAX(id) FROM food_records), 1), true);
-
