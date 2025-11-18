@@ -90,7 +90,7 @@ VALUES
 ('Pull-ups', 150, 3, 10, '["Back", "Biceps", "Shoulders"]'),
 ('Shoulder Press', 200, 3, 12, '["Shoulders", "Triceps"]'),
 ('Bicep Curls', 300, 3, 15, '["Biceps"]'),
-('Tricep Dips', 100, 3, 12, '["Triceps", "Chest"]');
+('Tricep Dips', 100, 3, 12, '["Triceps", "Chest"]'),
 ('Push Ups', 100, 3, 12, '["chest","triceps"]'),
 ('Squats', 150, 4, 15, '["legs","glutes"]');
 
