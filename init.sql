@@ -79,6 +79,7 @@ INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_h
 VALUES
 ('Alice', 'alice@example.com', 'hashed_password_1', 'standard', 1, 110, 70),
 ('Bob', 'bob@example.com', 'hashed_password_2', 'premium', 2, 115, 72);
+('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', NULL, NULL, NULL);
 
 -- Insert workouts
 INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
