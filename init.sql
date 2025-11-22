@@ -20,8 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     current_desk_id INT,
     standing_height INT,
     sitting_height INT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-    ,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desk(id) ON DELETE SET NULL
 );
 
@@ -63,6 +62,7 @@ CREATE TABLE IF NOT EXISTS food_records (
     CONSTRAINT fk_food_records_food FOREIGN KEY (food_id) REFERENCES foods(id) ON DELETE CASCADE,
     CONSTRAINT fk_food_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 CREATE INDEX IF NOT EXISTS idx_workout_records_user ON workout_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
 
@@ -79,7 +79,8 @@ INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_h
 VALUES
 ('Alice', 'alice@example.com', 'hashed_password_1', 'standard', 1, 110, 70),
 ('Bob', 'bob@example.com', 'hashed_password_2', 'premium', 2, 115, 72),
-('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', NULL, NULL, NULL);
+('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', NULL, NULL, NULL),
+('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', NULL, NULL, NULL);
 
 -- Insert workouts
 INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
