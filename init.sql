@@ -184,3 +184,116 @@ VALUES
 (1, 1),
 (2, 2);
 
+--food functions
+CREATE OR REPLACE FUNCTION list_food()
+    RETURNS SETOF foods AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM foods ORDER BY id ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION create_food(
+    p_name TEXT,
+    p_calories_intake INT
+)
+RETURNS VOID AS $$
+BEGIN
+    RETURN (
+    INSERT INTO foods (name, calories_intake)
+    VALUES (p_name, p_calories_intake);
+    RETURNS *
+    );
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION delete_food(p_id INT)
+RETURNS VOID AS $$
+BEGIN
+    DELETE FROM foods WHERE id = p_id;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+--meal functions
+CREATE OR REPLACE FUNCTION meal_records(p_user_id INT, p_food_id INT)
+    RETURNS food_records AS $$
+BEGIN
+    RETURN (
+    INSERT INTO food_records (user_id, food_id)
+    VALUES (p_user_id, p_food_id)
+    RETURNING *
+    );
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION meal_list()
+    RETURNS SETOF foods AS $$
+BEGIN
+    RETURN QUERY
+    SELECT id,name,calories_intake AS calories 
+    FROM foods
+    ORDER BY id ASC;
+END;    
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION meal_delete(p_user_id INT, p_record_id INT)
+RETURNS food_records AS $$
+BEGIN
+    RETURN (
+    DELETE FROM food_records
+    WHERE user_id = p_user_id AND id = p_record_id
+    RETURNING *
+    );
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION meal_today(p_user_id INT)
+RETURNS TABLE(total_meals INT, calories_eaten INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        COUNT(*)::int AS total_meals,
+        COALESCE(SUM(f.calories_intake), 0)::int AS calories_eaten
+    FROM food_records fr
+    JOIN foods f ON f.id = fr.food_id
+    WHERE fr.user_id = p_user_id;
+END;
+$$ lANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION meal_get(p_user_id INT)
+RETURNS TABLE(id INT,foodId,name TEXT, calories INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        fr.id,
+        fr.food_id AS "foodId",
+        f.name,
+        f.calories_intake AS "calories"
+      FROM food_records fr
+      JOIN foods f ON f.id = fr.food_id
+      WHERE fr.user_id = p_user_id
+      ORDER BY fr.timestamp ASC;
+END;
+$$ lANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION meal_clear(p_user_id INT,p_start DATE,p_end DATE)
+RETURNS TABLE(day DATE, calories INT) AS $$
+BEGIN 
+    RETURN QUERY
+    SELECT
+        DATE(fr.timestamp) AS day,
+        COALESCE(SUM(f.calories_intake), 0)::int AS calories
+      FROM food_records fr
+      JOIN foods f ON f.id = fr.food_id
+      WHERE fr.user_id = p_user_id
+        AND fr.timestamp >= p_start
+        AND fr.timestamp <= p_end
+      GROUP BY DATE(fr.timestamp)
+      ORDER BY DATE(fr.timestamp);
+END;
+$$ lANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+
