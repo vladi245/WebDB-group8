@@ -6,7 +6,7 @@
 
 -- desks
 CREATE TABLE IF NOT EXISTS desk (
-    id SERIAL PRIMARY KEY,
+    id VARCHAR(150) UNIQUE NOT NULL,
     height INT NOT NULL CHECK (height >= 0)
 );
 
@@ -77,10 +77,8 @@ INSERT INTO desk (height) VALUES
 -- Insert users
 INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_height, sitting_height)
 VALUES
-('Alice', 'alice@example.com', 'hashed_password_1', 'standard', 1, 110, 70),
-('Bob', 'bob@example.com', 'hashed_password_2', 'premium', 2, 115, 72),
 ('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', NULL, NULL, NULL),
-('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', NULL, NULL, NULL);
+('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', 'cd:fb:1a:53:fb:e6', NULL, NULL);
 
 -- Insert workouts
 INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
