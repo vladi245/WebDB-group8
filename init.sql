@@ -241,9 +241,9 @@ CREATE OR REPLACE FUNCTION meal_delete(p_user_id INT, p_record_id INT)
 RETURNS SETOF food_records AS $$
 BEGIN
     RETURN QUERY
-    DELETE FROM food_records
-    WHERE user_id = p_user_id AND id = p_record_id
-    RETURNING *;
+    DELETE FROM food_records AS fr
+    WHERE fr.user_id = p_user_id AND fr.id = p_record_id
+    RETURNING fr.*;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
