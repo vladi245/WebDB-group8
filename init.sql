@@ -6,7 +6,7 @@
 
 -- desks
 CREATE TABLE IF NOT EXISTS desk (
-    id VARCHAR(150) UNIQUE NOT NULL,
+    id SERIAL PRIMARY KEY,
     height INT NOT NULL CHECK (height >= 0)
 );
 
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     type VARCHAR(50) NOT NULL,
-    current_desk_id VARCHAR(150),
+    current_desk_id INT,
     standing_height INT,
     sitting_height INT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -69,15 +69,18 @@ CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
 -- END OF SCHEMA
 
 -- Insert desks
-INSERT INTO desk (id, height) VALUES
-('ee:62:5b:b8:73:1d', 800),
-('cd:fb:1a:53:fb:e6', 750);
+INSERT INTO desk (height) VALUES
+(70),
+(75),
+(80);
 
 -- Insert users
 INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_height, sitting_height)
 VALUES
-('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', 'ee:62:5b:b8:73:1d', NULL, NULL),
-('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', 'cd:fb:1a:53:fb:e6', NULL, NULL);
+('Alice', 'alice@example.com', 'hashed_password_1', 'standard', 1, 110, 70),
+('Bob', 'bob@example.com', 'hashed_password_2', 'premium', 2, 115, 72),
+('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', NULL, NULL, NULL),
+('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', NULL, NULL, NULL);
 
 -- Insert workouts
 INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
