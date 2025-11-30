@@ -230,8 +230,8 @@ CREATE OR REPLACE FUNCTION meal_list()
     RETURNS TABLE(id INT, name VARCHAR, calories INT) AS $$
 BEGIN
     RETURN QUERY
-    SELECT id, name, calories_intake::int AS calories
-    FROM foods
+    SELECT f.id, f.name, f.calories_intake::int AS calories
+    FROM foods AS f
     ORDER BY id ASC;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
@@ -351,15 +351,15 @@ BEGIN
         p_sitting_height
     )
     RETURNING
-        id,
-        name,
-        email,
-        password_hash,
-        type,
-        current_desk_id,
-        standing_height,
-        sitting_height,
-        created_at;
+        users.id,
+        users.name,
+        users.email,
+        users.password_hash::varchar AS password_hash,
+        users.type,
+        users.current_desk_id,
+        users.standing_height,
+        users.sitting_height,
+        users.created_at::timestamp AS created_at;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
@@ -490,8 +490,10 @@ CREATE OR REPLACE FUNCTION workoutrecord_model(
 BEGIN
     RETURN QUERY    
     INSERT INTO workout_records (workout_id, user_id, timestamp)
-    VALUES (p_workout_id, p_user_id, p_timestamp)
-    RETURNING workout_id, user_id, timestamp AS record_ts;
+    VALUES (p_workout_id, p_user_id,COALESCE(p_timestamp, now()))
+    RETURNING workout_records.workout_id, 
+    workout_records.user_id, 
+    workout_records.timestamp::timestamp AS record_ts;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
@@ -511,12 +513,12 @@ BEGIN
     SELECT
         wr.id,
         w.id AS workoutId,
-        w.name,
+        w.name::text,
         w.calories_burned,
         w.sets,
         w.reps,
         w.muscle_group,
-        wr.timestamp AS record_ts
+        wr.timestamp::timestamp AS record_ts
       FROM workout_records wr
       JOIN workouts w ON w.id = wr.workout_id
       WHERE wr.user_id = p_user_id
@@ -542,12 +544,12 @@ RETURN QUERY
         wr.id AS record_id,
         w.id AS workout_id,
         w.name,
-        COUNT(wr.id) OVER() AS total_workouts,
+        COUNT(wr.id) OVER()::int AS total_workouts,
         w.calories_burned,
         w.sets,
         w.reps,
         w.muscle_group,
-        wr.timestamp AS record_ts
+        wr.timestamp::timestamp AS record_ts
       FROM workout_records wr
       JOIN workouts w ON w.id = wr.workout_id
       WHERE wr.user_id = p_user_id
@@ -589,8 +591,8 @@ RETURNS TABLE(
 BEGIN
     RETURN QUERY
     SELECT
-    COUNT(*) AS week_records, 
-    COALESCE(SUM(COALESCE(w.calories_burned,0)),0) AS week_calories
+    COUNT(*)::int AS week_records, 
+    COALESCE(SUM(COALESCE(w.calories_burned,0))::int, 0) AS week_calories
     FROM workout_records wr
     JOIN workouts w ON wr.workout_id = w.id
     WHERE wr.user_id = p_user_id
@@ -607,9 +609,9 @@ RETURNS TABLE(
 BEGIN
     RETURN QUERY
         SELECT 
-            date_trunc('day', wr.timestamp) AS day,
-            COALESCE(SUM(COALESCE(w.calories_burned,0)),0) AS calories,
-            COUNT(*) AS records
+            date_trunc('day', wr.timestamp)::date AS day,
+            COALESCE(SUM(COALESCE(w.calories_burned,0))::int, 0) AS calories,
+            COUNT(*)::int AS records
        FROM workout_records wr
        JOIN workouts w ON wr.workout_id = w.id
        WHERE wr.user_id = p_user_id 
