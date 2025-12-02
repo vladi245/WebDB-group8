@@ -6,8 +6,15 @@
 
 -- desks
 CREATE TABLE IF NOT EXISTS desk (
-    id VARCHAR(150) UNIQUE NOT NULL,
-    height INT NOT NULL CHECK (height >= 0)
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS desk_record (
+    id SERIAL PRIMARY KEY,
+    desk_id VARCHAR(150) UNIQUE NOT NULL,
+    height INT NOT NULL CHECK (height >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- Users table
