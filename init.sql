@@ -503,47 +503,48 @@ CREATE OR REPLACE FUNCTION workoutrecord_model(
     p_timestamp TIMESTAMP DEFAULT NULL
     )
     RETURNS TABLE (
-        id INT,
+        record_id INT,
         workout_id INT,
         user_id INT,
-        record_ts TIMESTAMP
+        "timestamp" TIMESTAMP
     ) AS $$
 BEGIN
     RETURN QUERY    
     INSERT INTO workout_records (workout_id, user_id, "timestamp")
     VALUES (p_workout_id, p_user_id,COALESCE(p_timestamp, now()))
-    RETURNING workout_records.id,
+    RETURNING workout_records.id AS record_id,
               workout_records.workout_id, 
               workout_records.user_id, 
-              workout_records."timestamp"::timestamp AS record_ts;
+              workout_records."timestamp"::timestamp AS timestamp;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION workoutrecord_get(p_user_id INT)
+CREATE OR REPLACE FUNCTION workoutrecord_get(p_user_id INT, p_record_id INT)
     RETURNS TABLE (
-        id INT,
+        record_id INT,
         workout_id INT,
         name TEXT,
         calories_burned INT,
         sets INT,
         reps INT,
         muscle_group JSONB,
-        record_ts TIMESTAMP
+        "timestamp" TIMESTAMP
     ) AS $$
 BEGIN
     RETURN QUERY    
     SELECT
-        wr.id AS id,
+        wr.id AS record_id,
         w.id AS workout_id,
-        w.name::text,
+        w.name::text AS name,
         w.calories_burned,
         w.sets,
         w.reps,
         w.muscle_group,
-        wr."timestamp"::timestamp AS record_ts
+        wr."timestamp"::timestamp AS timestamp
       FROM workout_records wr
       JOIN workouts w ON w.id = wr.workout_id
       WHERE wr.user_id = p_user_id
+      AND(p_record_id IS NULL OR wr.id = p_record_id)
       ORDER BY wr."timestamp" ASC;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
@@ -558,7 +559,7 @@ CREATE OR REPLACE FUNCTION workoutrecord_user(p_user_id INT, p_limit INT)
         sets INT,
         reps INT,
         muscle_group JSONB,
-        record_ts TIMESTAMP
+        "timestamp" TIMESTAMP
     ) AS $$
 BEGIN
 RETURN QUERY
@@ -571,14 +572,14 @@ RETURN QUERY
         w.sets,
         w.reps,
         w.muscle_group,
-        wr.timestamp::timestamp AS record_ts
+        wr.timestamp::timestamp AS timestamp
       FROM workout_records wr
       JOIN workouts w ON w.id = wr.workout_id
       WHERE wr.user_id = p_user_id
       ORDER BY wr.timestamp ASC
       LIMIT p_limit;
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION workoutrecord_stats(p_user_id INT)
 RETURNS JSON AS $$
