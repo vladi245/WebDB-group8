@@ -63,8 +63,21 @@ CREATE TABLE IF NOT EXISTS food_records (
     CONSTRAINT fk_food_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Hydration records table
+CREATE TABLE IF NOT EXISTS hydration_records (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    goal_ml INT NOT NULL DEFAULT 2000,
+    current_ml INT NOT NULL DEFAULT 0,
+    recorded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    CONSTRAINT fk_hydration_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_workout_records_user ON workout_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_hydration_records_user ON hydration_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_hydration_records_date ON hydration_records(recorded_at);
 
 -- END OF SCHEMA
 
