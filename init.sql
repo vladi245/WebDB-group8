@@ -6,7 +6,7 @@
 
 -- desks
 CREATE TABLE IF NOT EXISTS desk (
-    id SERIAL PRIMARY KEY,
+    id VARCHAR(150) UNIQUE NOT NULL,
     height INT NOT NULL CHECK (height >= 0)
 );
 
@@ -17,10 +17,10 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     type VARCHAR(50) NOT NULL,
-    current_desk_id INT,
+    current_desk_id VARCHAR(150),
     standing_height INT,
     sitting_height INT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),  
     CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desk(id) ON DELETE SET NULL
 );
 
@@ -63,24 +63,43 @@ CREATE TABLE IF NOT EXISTS food_records (
     CONSTRAINT fk_food_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Hydration records table
+CREATE TABLE IF NOT EXISTS hydration_records (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    goal_ml INT NOT NULL DEFAULT 2000,
+    current_ml INT NOT NULL DEFAULT 0,
+    recorded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    CONSTRAINT fk_hydration_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Personal extension Bartek - Contact form
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS idx_workout_records_user ON workout_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_hydration_records_user ON hydration_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_hydration_records_date ON hydration_records(recorded_at);
 
 -- END OF SCHEMA
 
 -- Insert desks
-INSERT INTO desk (height) VALUES
-(70),
-(75),
-(80);
+INSERT INTO desk (id, height) VALUES
+('ee:62:5b:b8:73:1d', 800),
+('cd:fb:1a:53:fb:e6', 750);
 
 -- Insert users
 INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_height, sitting_height)
 VALUES
-('Alice', 'alice@example.com', 'hashed_password_1', 'standard', 1, 110, 70),
-('Bob', 'bob@example.com', 'hashed_password_2', 'premium', 2, 115, 72),
-('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', NULL, NULL, NULL),
-('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', NULL, NULL, NULL);
+('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', 'ee:62:5b:b8:73:1d', NULL, NULL),
+('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', 'cd:fb:1a:53:fb:e6', NULL, NULL);
 
 -- Insert workouts
 INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
