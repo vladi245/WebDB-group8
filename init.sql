@@ -241,9 +241,10 @@ CREATE OR REPLACE FUNCTION meal_delete(p_user_id INT, p_record_id INT)
 RETURNS SETOF food_records AS $$
 BEGIN
     RETURN QUERY
-    DELETE FROM food_records AS fr
-    WHERE fr.user_id = p_user_id AND fr.id = p_record_id
-    RETURNING fr.*;
+    DELETE FROM food_records 
+    WHERE user_id = p_user_id 
+    AND id = p_record_id
+    RETURNING *;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
@@ -480,27 +481,29 @@ $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION workoutrecord_model(
     p_user_id INT, 
     p_workout_id INT,
-    p_timestamp TIMESTAMP DEFAULT now()
+    p_timestamp TIMESTAMP DEFAULT NULL
     )
     RETURNS TABLE (
+        id INT,
         workout_id INT,
         user_id INT,
         record_ts TIMESTAMP
     ) AS $$
 BEGIN
     RETURN QUERY    
-    INSERT INTO workout_records (workout_id, user_id, timestamp)
+    INSERT INTO workout_records (workout_id, user_id, "timestamp")
     VALUES (p_workout_id, p_user_id,COALESCE(p_timestamp, now()))
-    RETURNING workout_records.workout_id, 
-    workout_records.user_id, 
-    workout_records.timestamp::timestamp AS record_ts;
+    RETURNING workout_records.id,
+              workout_records.workout_id, 
+              workout_records.user_id, 
+              workout_records."timestamp"::timestamp AS record_ts;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION workoutrecord_get(p_user_id INT)
     RETURNS TABLE (
         id INT,
-        workoutId INT,
+        workout_id INT,
         name TEXT,
         calories_burned INT,
         sets INT,
@@ -511,18 +514,18 @@ CREATE OR REPLACE FUNCTION workoutrecord_get(p_user_id INT)
 BEGIN
     RETURN QUERY    
     SELECT
-        wr.id,
-        w.id AS workoutId,
+        wr.id AS id,
+        w.id AS workout_id,
         w.name::text,
         w.calories_burned,
         w.sets,
         w.reps,
         w.muscle_group,
-        wr.timestamp::timestamp AS record_ts
+        wr."timestamp"::timestamp AS record_ts
       FROM workout_records wr
       JOIN workouts w ON w.id = wr.workout_id
       WHERE wr.user_id = p_user_id
-      ORDER BY wr.timestamp ASC;
+      ORDER BY wr."timestamp" ASC;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
