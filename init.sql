@@ -498,8 +498,8 @@ $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
 --workoutrecord functions
 CREATE OR REPLACE FUNCTION workoutrecord_model(
-    p_user_id INT, 
     p_workout_id INT,
+    p_user_id INT,
     p_timestamp TIMESTAMP DEFAULT NULL
     )
     RETURNS TABLE (
