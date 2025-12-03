@@ -83,10 +83,22 @@ CREATE TABLE IF NOT EXISTS contact_messages (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS desk_records (
+    id SERIAL PRIMARY KEY,
+    desk_id VARCHAR(150) NOT NULL,
+    user_id INT NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('standing', 'sitting')),
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    CONSTRAINT fk_desk_records_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_desk_records_desk FOREIGN KEY (desk_id) REFERENCES desk(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_workout_records_user ON workout_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_food_records_user ON food_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_hydration_records_user ON hydration_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_hydration_records_date ON hydration_records(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_desk_records_user ON desk_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_desk_records_desk ON desk_records(desk_id);
 
 -- END OF SCHEMA
 
@@ -100,6 +112,10 @@ INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_h
 VALUES
 ('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', 'ee:62:5b:b8:73:1d', NULL, NULL),
 ('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', 'cd:fb:1a:53:fb:e6', NULL, NULL);
+
+-- Insert desk records (after desks and users exist)
+INSERT INTO desk_records (desk_id, user_id, status) VALUES
+('cd:fb:1a:53:fb:e6', 2, 'standing');
 
 -- Insert workouts
 INSERT INTO workouts (name, calories_burned, sets, reps, muscle_group)
