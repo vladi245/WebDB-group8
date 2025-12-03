@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     current_desk_id VARCHAR(150),
     standing_height INT,
     sitting_height INT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),  
     CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desk(id) ON DELETE SET NULL
 );
 
@@ -203,3 +203,456 @@ VALUES
 (1, 1),
 (2, 2);
 
+--food functions
+CREATE OR REPLACE FUNCTION list_food()
+    RETURNS SETOF foods AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM foods ORDER BY id ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION create_food(
+    p_name TEXT,
+    p_calories_intake INT
+)
+RETURNS SETOF foods AS $$
+BEGIN
+    RETURN QUERY
+    INSERT INTO foods (name, calories_intake)
+    VALUES (p_name, p_calories_intake)
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION delete_food(p_id INT)
+RETURNS VOID AS $$
+BEGIN
+    DELETE FROM foods WHERE id = p_id;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+--meal functions
+CREATE OR REPLACE FUNCTION meal_records(p_user_id INT, p_food_id INT)
+    RETURNS SETOF food_records AS $$
+BEGIN
+    RETURN QUERY
+    INSERT INTO food_records (user_id, food_id)
+    VALUES (p_user_id, p_food_id)
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION meal_list()
+    RETURNS TABLE(id INT, name VARCHAR, calories INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT f.id, f.name, f.calories_intake::int AS calories
+    FROM foods AS f
+    ORDER BY id ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION meal_delete(p_user_id INT, p_record_id INT)
+RETURNS SETOF food_records AS $$
+BEGIN
+    RETURN QUERY
+    DELETE FROM food_records 
+    WHERE user_id = p_user_id 
+    AND id = p_record_id
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION meal_today(p_user_id INT)
+RETURNS TABLE(total_meals INT, calories_eaten INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        COUNT(*)::int AS total_meals,
+        COALESCE(SUM(f.calories_intake), 0)::int AS calories_eaten
+    FROM food_records fr
+    JOIN foods f ON f.id = fr.food_id
+    WHERE fr.user_id = p_user_id;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION meal_get(p_user_id INT)
+RETURNS TABLE(id INT, foodId INT, name VARCHAR, calories INT) AS $$
+        SELECT
+                fr.id,
+                fr.food_id AS foodId,
+                f.name,
+                f.calories_intake AS calories
+            FROM food_records fr
+            JOIN foods f ON f.id = fr.food_id
+            WHERE fr.user_id = p_user_id
+            ORDER BY fr.timestamp ASC;
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION meal_clear(p_user_id INT,p_start DATE,p_end DATE)
+RETURNS TABLE(day DATE, calories INT) AS $$
+BEGIN 
+    RETURN QUERY
+    SELECT
+        DATE(fr.timestamp) AS day,
+        COALESCE(SUM(f.calories_intake), 0)::int AS calories
+      FROM food_records fr
+      JOIN foods f ON f.id = fr.food_id
+      WHERE fr.user_id = p_user_id
+        AND fr.timestamp >= p_start
+        AND fr.timestamp <= p_end
+      GROUP BY DATE(fr.timestamp)
+      ORDER BY DATE(fr.timestamp);
+END;
+$$ lANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+--user functions
+CREATE OR REPLACE FUNCTION user_get()
+RETURNS SETOF users AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * 
+    FROM users
+    ORDER BY id ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION user_delete(p_id INT)
+RETURNS SETOF users AS $$
+BEGIN
+    RETURN QUERY
+    DELETE FROM users
+    WHERE id = p_id
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION user_create(
+    p_name VARCHAR,
+    p_email VARCHAR,
+    p_password_hash TEXT,
+    p_type VARCHAR,
+    p_current_desk_id INT,
+    p_standing_height INT,
+    p_sitting_height INT
+)
+RETURNS TABLE(
+    id INT,
+    name VARCHAR,
+    email VARCHAR,
+    password_hash VARCHAR,
+    type VARCHAR,
+    current_desk_id INT,
+    standing_height INT,
+    sitting_height INT,
+    created_at TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    INSERT INTO users (
+        name,
+        email,
+        password_hash,
+        type,
+        current_desk_id,
+        standing_height,
+        sitting_height
+    ) VALUES (
+        p_name,
+        p_email,
+        p_password_hash,
+        p_type,
+        p_current_desk_id,
+        p_standing_height,
+        p_sitting_height
+    )
+    RETURNING
+        users.id,
+        users.name,
+        users.email,
+        users.password_hash::varchar AS password_hash,
+        users.type,
+        users.current_desk_id,
+        users.standing_height,
+        users.sitting_height,
+        users.created_at::timestamp AS created_at;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION user_email(p_email TEXT)
+RETURNS SETOF users AS $$
+    SELECT * FROM users WHERE email = p_email LIMIT 1;
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION user_id(p_id INT)
+RETURNS TABLE (
+    id INT,
+    name VARCHAR,
+    email VARCHAR,
+    password_hash VARCHAR,
+    type VARCHAR,
+    current_desk_id INT,
+    standing_height INT,
+    sitting_height INT,
+    created_at TIMESTAMP
+)AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        id,
+        name,
+        email,
+        password_hash,
+        type,
+        current_desk_id,
+        standing_height,
+        sitting_height,
+        created_at
+    FROM users
+    WHERE id = p_id;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION user_update(p_id INT,p_type VARCHAR)
+RETURNS TABLE (
+    id INT,
+    name VARCHAR,
+    email VARCHAR,
+    type VARCHAR,
+    current_desk_id INT,
+    standing_height INT,
+    sitting_height INT,
+    created_at TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE users
+    SET type = p_type
+    WHERE id = p_id
+    RETURNING
+        id,
+        name,
+        email,
+        type,
+        current_desk_id,
+        standing_height,
+        sitting_height,
+        created_at;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+--workout functions
+CREATE OR REPLACE FUNCTION workout_list()
+    RETURNS SETOF workouts AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * 
+    FROM workouts 
+    ORDER BY id ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION workout_create(
+    p_name TEXT,
+    p_calories_burned INT,
+    p_sets INT,
+    p_reps INT,
+    p_muscle_group JSONB
+)
+RETURNS SETOF workouts AS $$
+BEGIN
+    RETURN QUERY
+    INSERT INTO workouts (
+        name,
+        calories_burned,
+        sets,
+        reps,
+        muscle_group
+    )
+    VALUES (
+        p_name, 
+        p_calories_burned, 
+        p_sets, 
+        p_reps, 
+        p_muscle_group
+    )
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION workout_delete(p_id INT)
+RETURNS SETOF workouts AS $$
+BEGIN
+    RETURN QUERY
+    DELETE FROM workouts
+    WHERE id = p_id
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+--workoutrecord functions
+CREATE OR REPLACE FUNCTION workoutrecord_model(
+    p_workout_id INT,
+    p_user_id INT,
+    p_timestamp TIMESTAMP DEFAULT NULL
+    )
+    RETURNS TABLE (
+        record_id INT,
+        workout_id INT,
+        user_id INT,
+        "timestamp" TIMESTAMP
+    ) AS $$
+BEGIN
+    RETURN QUERY    
+    INSERT INTO workout_records (workout_id, user_id, "timestamp")
+    VALUES (p_workout_id, p_user_id,COALESCE(p_timestamp, now()))
+    RETURNING workout_records.id AS record_id,
+              workout_records.workout_id, 
+              workout_records.user_id, 
+              workout_records."timestamp"::timestamp AS timestamp;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION workoutrecord_get(p_user_id INT, p_record_id INT)
+    RETURNS TABLE (
+        record_id INT,
+        workout_id INT,
+        name TEXT,
+        calories_burned INT,
+        sets INT,
+        reps INT,
+        muscle_group JSONB,
+        "timestamp" TIMESTAMP
+    ) AS $$
+BEGIN
+    RETURN QUERY    
+    SELECT
+        wr.id AS record_id,
+        w.id AS workout_id,
+        w.name::text AS name,
+        w.calories_burned,
+        w.sets,
+        w.reps,
+        w.muscle_group,
+        wr."timestamp"::timestamp AS timestamp
+      FROM workout_records wr
+      JOIN workouts w ON w.id = wr.workout_id
+      WHERE wr.user_id = p_user_id
+      AND(p_record_id IS NULL OR wr.id = p_record_id)
+      ORDER BY wr."timestamp" ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION workoutrecord_user(p_user_id INT, p_limit INT)
+    RETURNS TABLE(
+        record_id INT,
+        workout_id INT,
+        name VARCHAR,
+        total_workouts INT,
+        calories_burned INT,
+        sets INT,
+        reps INT,
+        muscle_group JSONB,
+        "timestamp" TIMESTAMP
+    ) AS $$
+BEGIN
+RETURN QUERY
+    SELECT
+        wr.id AS record_id,
+        w.id AS workout_id,
+        w.name,
+        COUNT(wr.id) OVER()::int AS total_workouts,
+        w.calories_burned,
+        w.sets,
+        w.reps,
+        w.muscle_group,
+        wr.timestamp::timestamp AS timestamp
+      FROM workout_records wr
+      JOIN workouts w ON w.id = wr.workout_id
+      WHERE wr.user_id = p_user_id
+      ORDER BY wr.timestamp ASC
+      LIMIT p_limit;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION workoutrecord_stats(p_user_id INT)
+RETURNS JSON AS $$
+DECLARE
+        total_workouts INT;
+        total_calories INT;
+        total_records INT;
+BEGIN
+        SELECT 
+            COUNT(DISTINCT date_trunc('day', wr.timestamp))::int AS total_workouts,
+            COALESCE(SUM(COALESCE(w.calories_burned,0)),0)::int AS total_calories,
+            COUNT(*)::int AS total_records
+        INTO total_workouts, total_calories, total_records
+        FROM workout_records wr
+        JOIN workouts w ON wr.workout_id = w.id
+        WHERE wr.user_id = p_user_id;
+
+        RETURN json_build_object(
+            'total_workouts', total_workouts,
+            'total_calories', total_calories,
+            'total_records', total_records
+        );
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION workoutrecord_week(p_user_id INT)
+RETURNS TABLE(
+    week_records INT, 
+    week_calories INT
+    ) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+    COUNT(*)::int AS week_records, 
+    COALESCE(SUM(COALESCE(w.calories_burned,0))::int, 0) AS week_calories
+    FROM workout_records wr
+    JOIN workouts w ON wr.workout_id = w.id
+    WHERE wr.user_id = p_user_id
+        AND wr.timestamp >= (now() - interval '6 days')::timestamp;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION workoutrecord_day(p_user_id INT)
+RETURNS TABLE(
+    day DATE,
+    calories INT,
+    records INT
+    ) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT 
+            date_trunc('day', wr.timestamp)::date AS day,
+            COALESCE(SUM(COALESCE(w.calories_burned,0))::int, 0) AS calories,
+            COUNT(*)::int AS records
+       FROM workout_records wr
+       JOIN workouts w ON wr.workout_id = w.id
+       WHERE wr.user_id = p_user_id 
+        AND wr.timestamp >= (now() - interval '6 days')::timestamp
+    GROUP BY date_trunc('day', wr.timestamp)::date
+    ORDER BY date_trunc('day', wr.timestamp)::date ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION workoutrecord_delete(p_id INT, p_user_id INT DEFAULT NULL)
+RETURNS VOID AS $$
+BEGIN
+    IF p_user_id IS NOT NULL THEN
+        DELETE FROM workout_records 
+        WHERE id = p_id AND user_id = p_user_id;
+    ELSE
+        DELETE FROM workout_records 
+        WHERE id = p_id;
+    END IF;
+END;    
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
