@@ -203,6 +203,76 @@ VALUES
 (1, 1),
 (2, 2);
 
+-- contactmessagemodel functions
+CREATE OR REPLACE FUNCTION contactmessage_create(
+    p_name VARCHAR,
+    p_email VARCHAR,
+    p_message TEXT
+)
+RETURNS SETOF contact_messages AS $$
+BEGIN
+    RETURN QUERY
+    INSERT INTO contact_messages (name, email, message)
+    VALUES (p_name, p_email, p_message)
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION contactmessage_list()
+    RETURNS SETOF contact_messages AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM contact_messages ORDER BY id ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+--desk functions
+CREATE OR REPLACE FUNCTION desk_list()
+    RETURNS SETOF desk AS $$
+BEGIN
+    RETURN QUERY    
+    SELECT * FROM desk ORDER BY id ASC;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION desk_get(p_id VARCHAR)
+    RETURNS TABLE(id INT, height INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT id, height
+    FROM desk
+    WHERE id = p_id;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION desk_create(
+    p_id INT 
+    p_height INT
+)
+RETURNS TABLE(
+    id INT, 
+    height INT
+) AS $$
+BEGIN
+        RETURN QUERY
+        INSERT INTO desk (id, height)
+        VALUES (p_id, p_height)
+        RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION desk_update(p_id INT , p_height INT)
+    RETURNS TABLE(id INT, height INT) AS $$
+BEGIN
+    RETURN QUERY    
+    UPDATE desk
+    SET height = p_height
+    WHERE id = p_id
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+
 --food functions
 CREATE OR REPLACE FUNCTION list_food()
     RETURNS SETOF foods AS $$
