@@ -402,8 +402,12 @@ $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION user_email(p_email TEXT)
 RETURNS SETOF users AS $$
-    SELECT * FROM users WHERE email = p_email LIMIT 1;
+    SELECT *
+    FROM users
+    WHERE email = p_email
+    LIMIT 1;
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
+
 
 CREATE OR REPLACE FUNCTION user_id(p_id INT)
 RETURNS TABLE (
