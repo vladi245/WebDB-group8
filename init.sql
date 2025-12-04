@@ -572,29 +572,29 @@ $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION user_getheight(p_user_id INT)
 RETURNS TABLE(
-    id INT,
+    user_id INT,
     user_height INT
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT id, user_height
+    SELECT users.id, users.user_height
     FROM users
-    WHERE id = p_user_id;
+    WHERE users.id = p_user_id;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
 
 CREATE OR REPLACE FUNCTION user_updateheight(p_user_id INT, p_user_height INT)
 RETURNS TABLE(
-    id INT,
+    user_id INT,
     user_height INT
 ) AS $$
 BEGIN
     RETURN QUERY
     UPDATE users
     SET user_height = p_user_height
-    WHERE id = p_user_id
-    RETURNING id, user_height;
+    WHERE users.id = p_user_id
+    RETURNING users.id, users.user_height;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER; 
  
