@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     current_desk_id VARCHAR(150),
     standing_height INT,
     sitting_height INT,
+    user_height INT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),  
     CONSTRAINT fk_users_current_desk FOREIGN KEY (current_desk_id) REFERENCES desk(id) ON DELETE SET NULL
 );
@@ -108,10 +109,10 @@ INSERT INTO desk (id, height) VALUES
 ('cd:fb:1a:53:fb:e6', 750);
 
 -- Insert users
-INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_height, sitting_height)
+INSERT INTO users (name, email, password_hash, type, current_desk_id, standing_height, sitting_height, user_height)
 VALUES
-('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', 'ee:62:5b:b8:73:1d', NULL, NULL),
-('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', 'cd:fb:1a:53:fb:e6', NULL, NULL);
+('admin', 'admin@admin.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'admin', 'ee:62:5b:b8:73:1d', NULL, NULL, NULL),
+('premium', 'premium@premium.com', '$2b$10$Adna/ERWMRANNTNtm7lxMOj66cNEZM1vf..op4n/EgV4OAZJj5G7y', 'premium', 'cd:fb:1a:53:fb:e6', NULL, NULL, NULL);
 
 -- Insert desk records (after desks and users exist)
 INSERT INTO desk_records (desk_id, user_id, status) VALUES
@@ -424,7 +425,8 @@ CREATE OR REPLACE FUNCTION user_create(
     p_type VARCHAR,
     p_current_desk_id VARCHAR,
     p_standing_height INT,
-    p_sitting_height INT
+    p_sitting_height INT,
+    p_user_height INT
 )
 RETURNS TABLE(
     id INT,
@@ -435,6 +437,7 @@ RETURNS TABLE(
     current_desk_id VARCHAR,
     standing_height INT,
     sitting_height INT,
+    user_height INT,
     created_at TIMESTAMP
 ) AS $$
 BEGIN
@@ -446,7 +449,8 @@ BEGIN
         type,
         current_desk_id,
         standing_height,
-        sitting_height
+        sitting_height,
+        user_height
     ) VALUES (
         p_name,
         p_email,
@@ -454,7 +458,8 @@ BEGIN
         p_type,
         p_current_desk_id,
         p_standing_height,
-        p_sitting_height
+        p_sitting_height,
+        p_user_height
     )
     RETURNING
         users.id,
@@ -465,6 +470,7 @@ BEGIN
         users.current_desk_id::varchar,
         users.standing_height,
         users.sitting_height,
+        users.user_height,
         users.created_at::timestamp AS created_at;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
@@ -564,6 +570,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION user_getheight(p_user_id INT)
+RETURNS TABLE(
+    user_id INT,
+    user_height INT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT users.id, users.user_height
+    FROM users
+    WHERE users.id = p_user_id;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+
+CREATE OR REPLACE FUNCTION user_updateheight(p_user_id INT, p_user_height INT)
+RETURNS TABLE(
+    user_id INT,
+    user_height INT
+) AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE users
+    SET user_height = p_user_height
+    WHERE users.id = p_user_id
+    RETURNING users.id, users.user_height;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER; 
+ 
 --workout functions
 CREATE OR REPLACE FUNCTION workout_list()
     RETURNS SETOF workouts AS $$
