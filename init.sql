@@ -542,6 +542,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION user_update_name(p_id INT, p_name VARCHAR)
+RETURNS TABLE (
+    id INT,
+    name VARCHAR,
+    email VARCHAR,
+    type VARCHAR,
+    current_desk_id VARCHAR,
+    standing_height INT,
+    sitting_height INT,
+    created_at TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE users
+    SET name = p_name
+    WHERE users.id = p_id
+    RETURNING
+        users.id,
+        users.name,
+        users.email,
+        users.type,
+        users.current_desk_id,
+        users.standing_height,
+        users.sitting_height,
+        users.created_at::timestamp;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION user_getheight(p_user_id INT)
 RETURNS TABLE(
     id INT,
