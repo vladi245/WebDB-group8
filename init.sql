@@ -262,7 +262,7 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION desk_create(
-    p_id INT 
+    p_id INT,
     p_height INT
 )
 RETURNS TABLE(
