@@ -304,6 +304,57 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
+
+--hydration functions
+CREATE OR REPLACE FUNCTION hydration_today(
+    p_user_id INT
+)
+RETURNS TABLE(
+    id INT,
+    goal_ml INT,
+    current_ml INT
+    date DATE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        id,
+        goal_ml,
+        current_ml,
+        DATE(recorded_at) as date
+      FROM hydration_records
+      WHERE user_id = p_user_id
+        AND DATE(recorded_at) = CURRENT_DATE
+      ORDER BY recorded_at DESC
+      LIMIT 1
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION hydration_update(
+    p_user_id INT,
+    p_goal_ml INT,
+    p_current_ml INT
+)
+RETURNS TABLE(
+    id INT,
+    user_id INT,
+    goal_ml INT,
+    current_ml INT,
+    recorded_at TIMESTAMP,
+    updated_at TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE hydration_records 
+    SET goal_ml =COALESCE( p_goal_ml, goal_ml),
+        current_ml = COALESCE( p_current_ml,current_ml),
+        updated_at = NOW()
+    WHERE user_id = p_user_id
+    AND DATE(recorded_at) = CURRENT_DATE
+    RETURNING *;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
 --meal functions
 CREATE OR REPLACE FUNCTION meal_records(p_user_id INT, p_food_id INT)
     RETURNS SETOF food_records AS $$
