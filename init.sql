@@ -322,27 +322,27 @@ $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
 
 --hydration functions
-CREATE OR REPLACE FUNCTION hydration_today(
+CREATE OR REPLACE FUNCTION hydration_records(
     p_user_id INT
 )
 RETURNS TABLE(
     id INT,
     goal_ml INT,
-    current_ml INT
-    date DATE
+    current_ml INT,
+    day DATE
 ) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        id,
-        goal_ml,
-        current_ml,
-        DATE(recorded_at) as date
-      FROM hydration_records
-      WHERE user_id = p_user_id
-        AND DATE(recorded_at) = CURRENT_DATE
-      ORDER BY recorded_at DESC
-      LIMIT 1
+        hr.id,
+        hr.goal_ml,
+        hr.current_ml,
+        DATE(hr.recorded_at) as day
+      FROM hydration_records hr
+      WHERE hr.user_id = p_user_id
+        AND DATE(hr.recorded_at) = CURRENT_DATE
+      ORDER BY hr.recorded_at DESC
+      LIMIT 1;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
@@ -361,13 +361,124 @@ RETURNS TABLE(
 ) AS $$
 BEGIN
     RETURN QUERY
-    UPDATE hydration_records 
-    SET goal_ml =COALESCE( p_goal_ml, goal_ml),
-        current_ml = COALESCE( p_current_ml,current_ml),
+    UPDATE hydration_records hr 
+    SET goal_ml =COALESCE( p_goal_ml, hr.goal_ml),
+        current_ml = COALESCE( p_current_ml, hr.current_ml),
         updated_at = NOW()
-    WHERE user_id = p_user_id
-    AND DATE(recorded_at) = CURRENT_DATE
-    RETURNING *;
+    WHERE hr.user_id = p_user_id
+    AND DATE(hr.recorded_at) = CURRENT_DATE
+    RETURNING 
+        hr.id,
+        hr.user_id,
+        hr.goal_ml,
+        hr.current_ml,
+        hr.recorded_at::timestamp,
+        hr.updated_at::timestamp;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION hydration_create(
+    p_user_id INT,
+    p_goal_ml INT DEFAULT 2000,
+    p_current_ml INT DEFAULT 0
+)
+RETURNS TABLE(
+    id INT,
+    user_id INT,
+    goal_ml INT,
+    current_ml INT,
+    recorded_at TIMESTAMP,
+    updated_at TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    INSERT INTO hydration_records AS hr (user_id, goal_ml, current_ml)
+    VALUES (p_user_id, p_goal_ml, p_current_ml)
+    RETURNING 
+        hr.id,
+        hr.user_id,
+        hr.goal_ml,
+        hr.current_ml,
+        hr.recorded_at::timestamp,
+        hr.updated_at::timestamp;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION hydration_add(p_user_id INT, p_amount INT)
+RETURNS TABLE(
+    id INT,
+    user_id INT,
+    goal_ml INT,
+    current_ml INT,
+    recorded_at TIMESTAMP,
+    updated_at TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE hydration_records hr
+    SET current_ml = hr.current_ml + p_amount,
+        updated_at = NOW()
+    WHERE hr.user_id = p_user_id
+    AND DATE(hr.recorded_at) = CURRENT_DATE
+    RETURNING 
+        hr.id,
+        hr.user_id,
+        hr.goal_ml,
+        hr.current_ml,
+        hr.recorded_at::timestamp,
+        hr.updated_at::timestamp;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION hydration_remove(p_user_id INT, p_amount INT)
+RETURNS TABLE(
+    id INT,
+    user_id INT,
+    goal_ml INT,
+    current_ml INT,
+    recorded_at TIMESTAMP,
+    updated_at TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE hydration_records hr
+    SET current_ml = GREATEST(0, hr.current_ml - p_amount),
+        updated_at = NOW()
+    WHERE hr.user_id = p_user_id
+    AND DATE(hr.recorded_at) = CURRENT_DATE
+    RETURNING 
+        hr.id,
+        hr.user_id,
+        hr.goal_ml,
+        hr.current_ml,
+        hr.recorded_at::timestamp,
+        hr.updated_at::timestamp;
+END;
+$$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION hydration_reset(p_user_id INT)
+RETURNS TABLE(
+    id INT,
+    user_id INT,
+    goal_ml INT,
+    current_ml INT,
+    recorded_at TIMESTAMP,
+    updated_at TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    UPDATE hydration_records hr
+    SET current_ml = 0,
+        updated_at = NOW()
+    WHERE hr.user_id = p_user_id
+    AND DATE(hr.recorded_at) = CURRENT_DATE
+    RETURNING 
+        hr.id,
+        hr.user_id,
+        hr.goal_ml,
+        hr.current_ml,
+        hr.recorded_at::timestamp,
+        hr.updated_at::timestamp;
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
