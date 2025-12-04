@@ -252,7 +252,7 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION desk_get(p_id VARCHAR)
-    RETURNS TABLE(id INT, height INT) AS $$
+    RETURNS TABLE(id VARCHAR, height INT) AS $$
 BEGIN
     RETURN QUERY
     SELECT id, height
@@ -262,11 +262,11 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION desk_create(
-    p_id INT,
+    p_id VARCHAR,
     p_height INT
 )
 RETURNS TABLE(
-    id INT, 
+    id VARCHAR, 
     height INT
 ) AS $$
 BEGIN
@@ -277,8 +277,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION desk_update(p_id INT , p_height INT)
-    RETURNS TABLE(id INT, height INT) AS $$
+CREATE OR REPLACE FUNCTION desk_update(p_id VARCHAR , p_height INT)
+    RETURNS TABLE(id VARCHAR, height INT) AS $$
 BEGIN
     RETURN QUERY    
     UPDATE desk
