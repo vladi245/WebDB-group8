@@ -255,9 +255,9 @@ CREATE OR REPLACE FUNCTION desk_get(p_id VARCHAR)
     RETURNS TABLE(id VARCHAR, height INT) AS $$
 BEGIN
     RETURN QUERY
-    SELECT id, height
+    SELECT desk.id, desk.height
     FROM desk
-    WHERE id = p_id;
+    WHERE desk.id = p_id;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
