@@ -40,7 +40,7 @@ Calling functions like login or register will say database error if the database
 - To ensure a secure connection between the database and the backend, while preventing unwanted direct access.
 - Easy to update in case of changes to the environment variables.
 
-## Why This Works 
+## Why This Approach 
 - The data can be easily modified or expanded on, since the database is isolated.
 - Operations are predictable and easy to maintain, since they are handled by the functions.
 - The relationship between the tables makes sure that the data stays consistent as new data gets added.
